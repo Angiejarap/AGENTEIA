@@ -39,7 +39,9 @@ class MiAgente(Agente):
 
     def __init__(self):
         super().__init__(nombre="Mi Agente")
+        # Guarda cuantas veces paso por cada posicion.
         self.visitas = {}
+        # Sirve para no retroceder enseguida si hay otra opcion.
         self.ultima_accion = None
 
     def al_iniciar(self):
@@ -60,18 +62,21 @@ class MiAgente(Agente):
         posicion = percepcion["posicion"]
         self.visitas[posicion] = self.visitas.get(posicion, 0) + 1
 
+        # Si la meta esta al costado, conviene ir directo.
         for direccion in self.ACCIONES:
             if percepcion[direccion] == "meta":
                 self.ultima_accion = direccion
                 return direccion
 
         vertical, horizontal = percepcion["direccion_meta"]
+        # Estas son las direcciones que acercan al agente a la meta.
         preferidas = [
             direccion
             for direccion in (horizontal, vertical)
             if direccion in self.ACCIONES
         ]
 
+        # Primero intenta avanzar hacia la meta por una celda no visitada.
         for direccion in preferidas:
             if percepcion[direccion] != "libre":
                 continue
@@ -83,6 +88,7 @@ class MiAgente(Agente):
         mejor_direccion = None
         mejor_puntaje = None
 
+        # Compara todas las opciones libres y elige la de mejor utilidad.
         for direccion in self.ACCIONES:
             if percepcion[direccion] != "libre":
                 continue
@@ -111,6 +117,7 @@ class MiAgente(Agente):
         return fila + delta_fila, columna + delta_columna
 
     def _puntaje_movimiento(self, destino, direccion, preferidas):
+        # Menor puntaje significa mejor decision.
         visitas_destino = self.visitas.get(destino, 0)
         retroceso = direccion == self.OPUESTAS.get(self.ultima_accion)
         alineado_meta = direccion in preferidas
