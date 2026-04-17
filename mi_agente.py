@@ -35,6 +35,8 @@ class MiAgente(Agente):
         "derecha": "izquierda",
     }
 
+    ORDEN_PRIORIDAD = ["derecha", "abajo", "izquierda", "arriba"]
+
     def __init__(self):
         super().__init__(nombre="Mi Agente")
         self.visitas = {}
@@ -74,14 +76,23 @@ class MiAgente(Agente):
             if percepcion[direccion] != "libre":
                 continue
 
-            destino = self._destino(posicion, direccion)
-            if self.visitas.get(destino, 0) == 0:
+            if self.visitas.get(self._destino(posicion, direccion), 0) == 0:
                 self.ultima_accion = direccion
                 return direccion
 
-        mejor_direccion = self._buscar_menos_visitada(posicion, percepcion, evitar_retroceso=True)
-        if mejor_direccion is None:
-            mejor_direccion = self._buscar_menos_visitada(posicion, percepcion, evitar_retroceso=False)
+        mejor_direccion = None
+        mejor_puntaje = None
+
+        for direccion in self.ACCIONES:
+            if percepcion[direccion] != "libre":
+                continue
+
+            destino = self._destino(posicion, direccion)
+            puntaje = self._puntaje_movimiento(destino, direccion, preferidas)
+
+            if mejor_puntaje is None or puntaje < mejor_puntaje:
+                mejor_puntaje = puntaje
+                mejor_direccion = direccion
 
         if mejor_direccion is not None:
             self.ultima_accion = mejor_direccion
@@ -99,22 +110,15 @@ class MiAgente(Agente):
         fila, columna = posicion
         return fila + delta_fila, columna + delta_columna
 
-    def _buscar_menos_visitada(self, posicion, percepcion, evitar_retroceso):
-        mejor_direccion = None
-        menor_visita = None
+    def _puntaje_movimiento(self, destino, direccion, preferidas):
+        visitas_destino = self.visitas.get(destino, 0)
+        retroceso = direccion == self.OPUESTAS.get(self.ultima_accion)
+        alineado_meta = direccion in preferidas
+        prioridad = self.ORDEN_PRIORIDAD.index(direccion)
 
-        for direccion in self.ACCIONES:
-            if percepcion[direccion] != "libre":
-                continue
-
-            if evitar_retroceso and direccion == self.OPUESTAS.get(self.ultima_accion):
-                continue
-
-            destino = self._destino(posicion, direccion)
-            visitas = self.visitas.get(destino, 0)
-
-            if menor_visita is None or visitas < menor_visita:
-                menor_visita = visitas
-                mejor_direccion = direccion
-
-        return mejor_direccion
+        return (
+            0 if alineado_meta else 1,
+            1 if retroceso else 0,
+            visitas_destino,
+            prioridad,
+        )
