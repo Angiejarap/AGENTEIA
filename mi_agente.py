@@ -49,25 +49,18 @@ class MiAgente(Agente):
         Retorna:
             'arriba', 'abajo', 'izquierda' o 'derecha'
         """
-        # Escribe tu logica aqui.
-        #
-        # Ejemplo basico:
-        # vert, horiz = percepcion['direccion_meta']
-        #
-        # if percepcion[vert] == 'libre' or percepcion[vert] == 'meta':
-        #     return vert
-        # if percepcion[horiz] == 'libre' or percepcion[horiz] == 'meta':
-        #     return horiz
-        #
-        # return 'abajo'
+        for direccion in self.ACCIONES:
+            if percepcion[direccion] == "meta":
+                return direccion
 
-        print("Hola decidir")
+        vertical, horizontal = percepcion["direccion_meta"]
+
+        for direccion in (horizontal, vertical):
+            if direccion in self.ACCIONES and percepcion[direccion] == "libre":
+                return direccion
 
         for direccion in self.ACCIONES:
-            celda = percepcion[direccion]
-            if celda == "meta":
-                return direccion
-            if celda == "libre":
+            if percepcion[direccion] == "libre":
                 return direccion
 
         return "abajo"
